@@ -2,7 +2,7 @@
  * CommandUiRuntime tests on a real cordis Context with fake slash/connection
  * faces and real session scopes (createScope): session-keyed candidate
  * synthesis (host catalog by sessionId + contributions by availability,
- * collision fail-loud), the dispatch decision table cell by cell, matchSpace
+ * host/client collision coalescing), the dispatch decision table cell by cell, matchSpace
  * hot-key policy, matchEnter strong-wait / reject, the sessionId execute
  * payload, the scoped consume-token dispatch, per-session popupFor
  * lifecycle, and the directory invalidation event subscriptions.
@@ -264,10 +264,33 @@ describe('candidates', () => {
     expect(names).toEqual(['theme'])
   })
 
-  it('a contribution/host name collision fails loud', async () => {
-    const { command, source } = await bench()
-    command.register(themeContribution({ name: 'plan' }))
-    await expect(source.candidates(proj('s1'), req(''))).rejects.toThrow('collides with a host command')
+  it('a contribution/host collision keeps one host row without suppressing unrelated commands', async () => {
+    const commands: CommandDescriptor[] = [
+      { name: 'autoresearch', description: 'autoresearch loop', input: { hint: 'goal' } },
+      { name: 'goal', description: 'goal loop', input: { hint: 'objective' } },
+      { name: 'model', description: 'host model switch', input: { hint: 'provider/model' } },
+      { name: 'plan', description: 'plan mode', input: { hint: 'message' } },
+    ]
+    const { command, source, mint } = await bench({ commands: () => Promise.resolve({ commands }) })
+    command.register(themeContribution({ name: 'model' }))
+    const scope = mint('s1')
+
+    await expect(source.candidates(proj('s1'), req(''))).resolves.toEqual([
+      { name: 'autoresearch', description: 'autoresearch loop', hint: 'goal' },
+      { name: 'goal', description: 'goal loop', hint: 'objective' },
+      { name: 'model', description: 'host model switch', hint: 'provider/model' },
+      { name: 'plan', description: 'plan mode', hint: 'message' },
+    ])
+    expect(menuPick(source, 'model', proj('s1'))).toBe('handled')
+    expect(command.popupFor(scope.ctx).state.getSnapshot().open).toBe(true)
+    const space = source.matchSpace!(proj('s1'), '/model')
+    expect(space !== undefined && space !== 'handled' && 'claim' in space ? space.claim.hint : undefined)
+      .toBe('provider/model')
+    const argued = await source.matchEnter!(
+      proj('s1'), '/model provider/demo', new AbortController().signal, { images: 0 },
+    )
+    expect(argued !== undefined && argued !== 'handled' && 'claim' in argued ? argued.claim.hint : undefined)
+      .toBe('provider/model')
   })
 
 })

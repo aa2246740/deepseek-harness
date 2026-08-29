@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Typing a `/` command in the composer opens the matching surface — a registered popup, a host command's input, or a direct execution — and a command line is never silently downgraded to a plain prompt. Business packages contribute command surfaces through `ctx.commandUi`, registering a popupSelect spec (`/model`, `/permission`) or decorating an existing host command with a picker while the host keeps its catalog row and argument claim. Space and Enter resolve the line against the session's directory: a host descriptor with `input` is `leadingInput`, a registered `CommandUiSpec` is `popupSelect`, and everything else is `execute`.
+Typing a `/` command in the composer opens the matching surface — a registered popup, a host command's input, or a direct execution — and a command line is never silently downgraded to a plain prompt. Business packages contribute command surfaces through `ctx.commandUi`, registering a popupSelect spec (`/model`, `/permission`) or decorating an existing host command with a picker while the host keeps its catalog row and argument claim. When a client contribution and host command share a name, discovery keeps one host row; a bare pick opens the client popup, while Space or argued Enter follows the host input descriptor. Space and Enter otherwise resolve the line against the session's directory: a host descriptor with `input` is `leadingInput`, a registered `CommandUiSpec` is `popupSelect`, and everything else is `execute`.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ Mount this plugin alongside `ui-input-trigger` and `ui-conversation`; the `/` so
 
 ### Kinds and decorations
 
-A contribution is a client-owned command — a host-name collision fails loud. A decoration adds a bare-invocation popup to an EXISTING host command: the host command keeps its catalog row, its argument claim, and its lifecycle logging, and a decorated name with no host row in the session's directory never fires. Menu queries fuzzy-match ordered, case-insensitive subsequences of command names; prefixes rank first.
+A contribution is a client-owned command. When a host command has the same name, candidate synthesis keeps the host descriptor as the single row, bare menu or Enter dispatch opens the client popup, and Space or argued Enter follows the host descriptor. A decoration adds a bare-invocation popup to an EXISTING host command: the host command keeps its catalog row, its argument claim, and its lifecycle logging, and a decorated name with no host row in the session's directory never fires. Menu queries fuzzy-match ordered, case-insensitive subsequences of command names; prefixes rank first.
 
 ### Image-carrying submissions
 
