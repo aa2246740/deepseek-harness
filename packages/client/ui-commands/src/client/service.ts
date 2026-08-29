@@ -256,9 +256,12 @@ export class CommandUiRuntime extends Service implements CommandUiContract {
     }
     for (const contribution of this.live.contributions.values()) {
       if (!contribution.available(session)) continue
-      if (seen.has(contribution.name)) {
-        throw new Error(`ui-commands: contribution /${contribution.name} collides with a host command`)
-      }
+      // A Host extension can publish the command that an existing Web client
+      // already owns (for example, the messaging gateway's /model command).
+      // Keep the Host descriptor as the single discovery row; dispatch still
+      // applies the client popup to bare picks while argued input can fall
+      // through to the Host command below.
+      if (seen.has(contribution.name)) continue
       rows.push({ name: contribution.name, description: contribution.description })
     }
     return fuzzyCandidates(
@@ -297,7 +300,6 @@ export class CommandUiRuntime extends Service implements CommandUiContract {
   private matchSpace(session: ClientSessionContext, token: string): PickOutcome {
     if (!token.startsWith('/')) return undefined
     const name = token.slice(1)
-    if (this.live.contributions.has(name)) return undefined // popup kinds never claim on space
     const desc = this.directory.resolve(session.sessionId, name)
     if (desc === undefined || desc.input === undefined) return undefined
     return { claim: this.leadingClaim(desc, session) }
@@ -333,10 +335,11 @@ export class CommandUiRuntime extends Service implements CommandUiContract {
     }
     const contribution = this.live.contributions.get(name)
     if (contribution !== undefined && contribution.available(session)) {
-      if (!bare) return undefined
-      if (envelope.images > 0) refuseImages()
-      this.openPopup(name, contribution.ui, session, { via: 'enter', token })
-      return 'handled'
+      if (bare) {
+        if (envelope.images > 0) refuseImages()
+        this.openPopup(name, contribution.ui, session, { via: 'enter', token })
+        return 'handled'
+      }
     }
     await this.directory.ensureReady(session.sessionId, signal)
     const desc = this.directory.resolve(session.sessionId, name)
