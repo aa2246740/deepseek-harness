@@ -39,6 +39,21 @@ function stubAgent(rawId: string, overrides: Partial<Agent> = {}): Agent {
 }
 
 describe('Inbox', () => {
+  it('rejects an unidentified plugin message before writing an inbox splice', () => {
+    const session = Session.create(SessionId('invalid-live-inbox-message'))
+    const inbox = new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} })
+    const malformed = {
+      role: 'user',
+      content: [{ type: 'text', text: 'plugin followup without identity' }],
+      source: { kind: 'plugin', plugin: 'broken-plugin', form: 'instructions' },
+    } as unknown as UserMessage
+
+    expect(() => { inbox.append('next-turn', malformed) })
+      .toThrow('inbox message at index 0 lacks an identified message')
+    expect(session.events).toEqual([])
+    expect(inbox.nextTurn).toEqual([])
+  })
+
   it('rejects an invalid durable splice during reconstruction', () => {
     const session = Session.create(SessionId('invalid-inbox-replay'))
     session.append('agent/inbox/spliced', {

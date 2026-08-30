@@ -509,9 +509,26 @@ describe('Session', () => {
     expect(session.events).toHaveLength(1)
   })
 
+  it('rejects an unidentified message at the live append boundary', () => {
+    const session = Session.create(SessionId('live-message-identity'))
+    const malformed = {
+      role: 'user',
+      content: [{ type: 'text', text: 'plugin followup without identity' }],
+      source: { kind: 'plugin', plugin: 'broken-plugin', form: 'instructions' },
+    }
+
+    expect(() => session.append('user/message', malformed as never, { surfaceOp: 'append' }))
+      .toThrow('session event "user/message" lacks an identified message')
+    expect(session.events).toEqual([])
+  })
+
   it('accepts dense arrays and nested plain objects', () => {
     const session = Session.create(SessionId('s6'))
-    expect(() => session.append('user/message', { content: [{ type: 'text', text: 'x' }], source: { kind: 'user' }, extra: [1, 2, [3, { a: null, b: true }]] } as never, { surfaceOp: 'append' })).not.toThrow()
+    expect(() => session.append('user/message', createUserMessage({
+      content: [{ type: 'text', text: 'x' }],
+      source: { kind: 'user' },
+      extra: [1, 2, [3, { a: null, b: true }]],
+    }), { surfaceOp: 'append' })).not.toThrow()
     expect(session.events).toHaveLength(1)
   })
 
@@ -863,7 +880,9 @@ describe('Session', () => {
       data: unknown,
       opts?: unknown,
     ) => SessionEvent
-    const data = { content: [{ type: 'text', text: 'hello' }], source: { kind: 'user' } }
+    const data = createUserMessage({
+      content: [{ type: 'text', text: 'hello' }], source: { kind: 'user' },
+    })
 
     expect(() => appendRaw('user/message', data, { surfaceOp: 'invalid' }))
       .toThrow(/invalid surfaceOp/)
