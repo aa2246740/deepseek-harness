@@ -5,7 +5,6 @@
  */
 
 import type { MessageId } from '@deepseek-ai/dsh-llm'
-import { assertUserMessage } from '@deepseek-ai/dsh-session'
 import type { Session, SessionEventMap, UserMessage } from '@deepseek-ai/dsh-session'
 import type { InboxTarget } from './types.ts'
 
@@ -202,9 +201,6 @@ export class Inbox {
 
   /** Validate one normalized splice against the current projection. */
   private validate(splice: SessionEventMap['agent/inbox/spliced']): void {
-    for (const [index, message] of splice.inserted.entries()) {
-      assertUserMessage(message, `inbox message at index ${index}`)
-    }
     const inbox = this.state[splice.target]
     const removedCount = splice.removedCount ?? 0
     if (!Number.isSafeInteger(splice.start) || splice.start < 0 || splice.start > inbox.length
