@@ -11,7 +11,7 @@ import { isAbsolute } from 'node:path'
 import { deepFreeze } from '@deepseek-ai/dsh-llm'
 import { scopeOf, scopeTarget } from '@deepseek-ai/dsh-scope'
 import type { Scoped } from '@deepseek-ai/dsh-scope'
-import type { Message } from '@deepseek-ai/dsh-llm'
+import type { Message, UserMessage } from '@deepseek-ai/dsh-llm'
 import { SESSION_FORMAT_VERSION, SessionId } from './types.ts'
 import type { TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
 import type { CreateSessionOptions, EpochHeader, PrepareSessionOptions, RequestContext, SessionEvent, SessionEventMap, SessionEventType, SessionHeader, SurfaceIntent, SurfaceEventType } from './types.ts'
@@ -191,6 +191,21 @@ export function adoptSessionEvent<T extends SessionEvent>(event: T): T {
  */
 export function snapshotSessionEvent<T extends SessionEvent>(event: T): T {
   return adoptSessionEvent(structuredClone(event))
+}
+
+/**
+ * Validate one user-role message at a live producer boundary without taking
+ * ownership or mutating it. Durable inboxes use this before committing a
+ * splice so a structurally typed or JavaScript plugin cannot defer a malformed
+ * message until session replay.
+ * @param message - untrusted producer output claiming to be a user message.
+ * @param subject - stable diagnostic label for the accepting boundary.
+ */
+export function assertUserMessage(
+  message: unknown,
+  subject = 'user message',
+): asserts message is UserMessage {
+  assertMessageEventShape({ type: 'user/message', data: message }, subject)
 }
 
 /** Deep-freeze one acyclic JSON tree without consuming the JavaScript call stack. */
@@ -614,6 +629,7 @@ export class Session {
       throw new Error(`session event "${type}" carries non-JSON-serializable data`)
     }
     assertSupportedRequestHeader(type, dataSnapshot, `session event "${type}"`)
+    assertMessageEventShape({ type, data: dataSnapshot }, `session event "${type}"`)
     const surfaceMetadataSnapshot = snapshotJsonValue(surfaceMetadata)
     if (surfaceMetadataSnapshot === undefined) {
       throw new Error(`session event "${type}" carries non-JSON-serializable surface metadata`)
