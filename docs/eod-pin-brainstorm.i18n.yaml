@@ -1,6 +1,6 @@
 # Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
-#   pnpm run verify-translation-pairing --write docs/architecture.md
-architecture.md: 20d03c079fa8e1f73f733992b6e938f0f539a60f
-architecture.zh.md: 4e51b00e9c62558adc631b36e3d744e053932376
+#   pnpm run verify-translation-pairing --write docs/eod-pin-brainstorm.md
+eod-pin-brainstorm.md: 77bfec330fd1ddcd67837f70d66de853284e4f04
+eod-pin-brainstorm.zh.md: e9ab8aa160976654af5afd181a470bb0ed6fc1d7
