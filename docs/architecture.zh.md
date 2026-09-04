@@ -118,6 +118,8 @@ seam 正是替换一个提供方就能改变整个产品的原因。文件系统
 
 [实验性 Agent Teams](subsystems/agent-team.zh.md) 是 `ctx.agentTeams` 上的私有显式启用协作 seam，在可继续 subagent 之上提供持久 roster、任务板和 mailbox。
 
+<a id="where-new-behavior-goes"></a>
+
 ## 新行为的归属位置
 
 新行为附加到已有文档记录的扩展点。改动循环本身时，本映射随之更新。
