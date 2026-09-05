@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/eod-pin-hooks-0.1.2-rc1.md
+eod-pin-hooks-0.1.2-rc1.md: 76754d4d6056d8fb3a161baf35a0bea58b0e9066
+eod-pin-hooks-0.1.2-rc1.zh.md: 6edfc6bd03d4800bf4faa8ef0699479e64090cbe
